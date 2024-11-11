@@ -2,6 +2,7 @@
 package db
 
 import (
+	"chat-system/internal/db/migrations"
 	"database/sql"
 	"log"
 	"os"
@@ -37,5 +38,7 @@ func Connect() {
 	}
 
 	DB = sqlDB
+
+	migrations.RunMigrations(db)
 	log.Println("Connected to database")
 }
