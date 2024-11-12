@@ -34,7 +34,9 @@ func main() {
 	router.Use(middleware.ErrorHandler)
 
 	// Application routes
+	router.HandleFunc("/applications", appHandler.GetAll).Methods("GET")
 	router.HandleFunc("/applications", appHandler.Create).Methods("POST")
+	router.HandleFunc("/applications/{token}", appHandler.Update).Methods("PUT")
 
 	// Create server with timeouts
 	srv := &http.Server{

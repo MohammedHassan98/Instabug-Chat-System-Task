@@ -50,3 +50,27 @@ func (s *ApplicationService) GetApplicationByToken(ctx context.Context, token st
 	}
 	return &app, nil
 }
+
+func (s *ApplicationService) GetAllApplications(ctx context.Context) ([]models.Application, error) {
+	var apps []models.Application
+
+	if err := s.db.Find(&apps).Error; err != nil {
+		return nil, err
+	}
+	return apps, nil
+}
+
+func (s *ApplicationService) UpdateApplication(ctx context.Context, token string, name string) (*models.Application, error) {
+	app, err := s.GetApplicationByToken(ctx, token)
+
+	if err != nil {
+		return nil, err
+	}
+
+	app.Name = name
+	if err := s.db.Save(app).Error; err != nil {
+		return nil, err
+	}
+
+	return app, nil
+}
