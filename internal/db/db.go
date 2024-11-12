@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -13,13 +14,17 @@ import (
 	"gorm.io/gorm"
 )
 
-var DB *sql.DB
+var (
+	DB     *sql.DB
+	GormDB *gorm.DB
+)
 
 func Connect() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
+	// Connect to MySQL
 	dbURL := os.Getenv("DATABASE_URL")
 	dsn := dbURL + "?charset=utf8mb4&parseTime=True&loc=Local"
 
@@ -33,12 +38,18 @@ func Connect() {
 		log.Fatalf("Could not get underlying *sql.DB: %v", err)
 	}
 
+	// Configure connection pool
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxOpenConns(100)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
 	if err = sqlDB.Ping(); err != nil {
 		log.Fatalf("Could not ping the database: %v", err)
 	}
 
 	DB = sqlDB
+	GormDB = db
 
 	migrations.RunMigrations(db)
-	log.Println("Connected to database")
+	log.Println("Connected to database and services")
 }
