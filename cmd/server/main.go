@@ -59,6 +59,7 @@ func main() {
 
 	// Message routes
 	router.HandleFunc("/messages/{chatNumber}", messageHandler.Create).Methods("POST")
+	router.HandleFunc("/applications/{token}/chats/{chatNumber}/messages", messageHandler.GetMessages).Methods("GET")
 
 	// Create server with timeouts
 	srv := &http.Server{

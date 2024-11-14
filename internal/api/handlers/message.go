@@ -66,3 +66,36 @@ func (h *MessageHandler) Create(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
+
+func (h *MessageHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	token := vars["token"] // Get the application token from the URL
+	chatNumber, err := strconv.Atoi(vars["chatNumber"])
+	if err != nil {
+		http.Error(w, "Invalid chat number", http.StatusBadRequest)
+		return
+	}
+
+	messages, err := h.service.GetMessagesByChatNumberAndToken(r.Context(), token, uint(chatNumber))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := make([]struct {
+		MessageNumber int    `json:"Message Number"`
+		Body          string `json:"body"`
+	}, len(messages))
+
+	for i, message := range messages {
+		response[i] = struct {
+			MessageNumber int    `json:"Message Number"`
+			Body          string `json:"body"`
+		}{
+			MessageNumber: message.MessageNumber,
+			Body:          message.Body,
+		}
+	}
+
+	httputil.WriteJSON(w, http.StatusOK, response)
+}

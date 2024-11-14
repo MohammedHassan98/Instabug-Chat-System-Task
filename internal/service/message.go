@@ -51,3 +51,19 @@ func (s *MessageService) CreateMessage(ctx context.Context, chatID uint, body st
 
 	return message, nil
 }
+
+func (s *MessageService) GetMessagesByChatNumberAndToken(ctx context.Context, token string, chatNumber uint) ([]models.Message, error) {
+	var messages []models.Message
+
+	// Join with the Application model to filter by token
+	if err := s.db.Table("messages").
+		Select("messages.*").
+		Joins("JOIN chats ON chats.id = messages.chat_id").
+		Joins("JOIN applications ON applications.id = chats.application_id").
+		Where("applications.token = ? AND chats.chat_number = ?", token, chatNumber).
+		Find(&messages).Error; err != nil {
+		return nil, err
+	}
+
+	return messages, nil
+}
