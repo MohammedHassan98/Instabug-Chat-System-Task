@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
@@ -17,6 +18,7 @@ import (
 var (
 	DB     *sql.DB
 	GormDB *gorm.DB
+	Redis  *redis.Client
 )
 
 func Connect() {
@@ -49,6 +51,13 @@ func Connect() {
 
 	DB = sqlDB
 	GormDB = db
+
+	// Connect to Redis
+	Redis = redis.NewClient(&redis.Options{
+		Addr:     os.Getenv("REDIS_URL"),
+		Password: os.Getenv("REDIS_PASSWORD"),
+		DB:       0,
+	})
 
 	migrations.RunMigrations(db)
 	log.Println("Connected to database and services")
