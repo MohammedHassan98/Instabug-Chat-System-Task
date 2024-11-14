@@ -112,3 +112,34 @@ func (h *ApplicationHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	httputil.WriteJSON(w, http.StatusOK, response)
 }
+
+func (h *ApplicationHandler) GetChats(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	token := vars["token"]
+
+	chats, err := h.service.GetChatsWithApplicationByToken(r.Context(), token)
+
+	if err != nil {
+		httputil.WriteError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	// Prepare the response
+	response := make([]struct {
+		ChatNumber int `json:"Chat Number"`
+		Messages   int `json:"Messages"`
+	}, len(chats))
+
+	for i, chat := range chats {
+		response[i] = struct {
+			ChatNumber int `json:"Chat Number"`
+			Messages   int `json:"Messages"`
+		}{
+			ChatNumber: chat.ChatNumber,
+			Messages:   chat.MessagesCount,
+		}
+	}
+
+	// Return the response
+	httputil.WriteJSON(w, http.StatusOK, response)
+}

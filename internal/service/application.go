@@ -74,3 +74,20 @@ func (s *ApplicationService) UpdateApplication(ctx context.Context, token string
 
 	return app, nil
 }
+
+func (s *ApplicationService) GetChatsWithApplicationByToken(ctx context.Context, token string) ([]models.Chat, error) {
+	var chats []models.Chat
+
+	// Perform a single query with a join to fetch chats and the application ID
+	err := s.db.Table("applications").
+		Select("chats.chat_number, chats.messages_count").
+		Joins("JOIN chats ON chats.application_id = applications.id").
+		Where("applications.token = ?", token).
+		Scan(&chats).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return chats, nil
+}

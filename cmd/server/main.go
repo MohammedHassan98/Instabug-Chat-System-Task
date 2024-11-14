@@ -50,6 +50,7 @@ func main() {
 
 	// Application routes
 	router.HandleFunc("/applications", appHandler.GetAll).Methods("GET")
+	router.HandleFunc("/applications/{token}/chats", appHandler.GetChats).Methods("GET")
 	router.HandleFunc("/applications", appHandler.Create).Methods("POST")
 	router.HandleFunc("/applications/{token}", appHandler.Update).Methods("PUT")
 
