@@ -6,7 +6,9 @@ import (
 	"chat-system/internal/db"
 	"chat-system/internal/logger"
 	"chat-system/internal/middleware"
+	"chat-system/internal/queue"
 	"chat-system/internal/service"
+	"chat-system/internal/worker"
 	"context"
 	"log"
 	"net/http"
@@ -22,11 +24,22 @@ func main() {
 	// Initialize Database and Services
 	db.Connect()
 
+	// Initialize Queue
+	messageQueue := queue.NewMessageQueue(db.Redis)
+
 	// Initialize Services
 	appService := service.NewApplicationService(db.GormDB)
+	chatService := service.NewChatService(db.GormDB, db.Redis, messageQueue)
 
 	// Initialize Handlers
 	appHandler := handlers.NewApplicationHandler(appService)
+	chatHandler := handlers.NewChatHandler(chatService)
+
+	// Initialize Worker
+	worker := worker.NewWorker(messageQueue)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	worker.Start(ctx)
 
 	// Set up router with middleware
 	router := mux.NewRouter()
@@ -37,6 +50,9 @@ func main() {
 	router.HandleFunc("/applications", appHandler.GetAll).Methods("GET")
 	router.HandleFunc("/applications", appHandler.Create).Methods("POST")
 	router.HandleFunc("/applications/{token}", appHandler.Update).Methods("PUT")
+
+	// Chat routes
+	router.HandleFunc("/chats/{token}", chatHandler.Create).Methods("POST")
 
 	// Create server with timeouts
 	srv := &http.Server{
