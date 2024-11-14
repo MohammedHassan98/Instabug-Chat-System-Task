@@ -103,8 +103,8 @@ func (h *ApplicationHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := struct {
-		Token string `json:"token"`
-		Name  string `json:"name"`
+		Token string `json:"Token"`
+		Name  string `json:"Name"`
 	}{
 		Token: app.Token,
 		Name:  app.Name,

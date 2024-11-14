@@ -27,7 +27,7 @@ func (h *ChatHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := struct {
-		ChatNumber int `json:"chat_number"`
+		ChatNumber int `json:"Chat Number"`
 	}{
 		ChatNumber: chat.ChatNumber,
 	}
