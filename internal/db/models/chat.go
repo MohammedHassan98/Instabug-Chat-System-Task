@@ -13,5 +13,6 @@ type Chat struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 
-	Application Application `gorm:"constraint:OnDelete:CASCADE"`
+	CompositeIndex string      `gorm:"index:idx_application_chat_number_application_id,unique;not null"`
+	Application    Application `gorm:"constraint:OnDelete:CASCADE"`
 }

@@ -12,5 +12,6 @@ type Message struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 
-	Chat Chat `gorm:"constraint:OnDelete:CASCADE"`
+	CompositeIndex string `gorm:"index:idx_chat_message_number,unique;not null"`
+	Chat           Chat   `gorm:"constraint:OnDelete:CASCADE"`
 }
