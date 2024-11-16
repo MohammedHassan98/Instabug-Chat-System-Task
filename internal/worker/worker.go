@@ -5,18 +5,24 @@ import (
 	"chat-system/internal/db/models"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
 	"chat-system/internal/queue"
+
+	"bytes"
+
+	"github.com/elastic/go-elasticsearch/v8"
 )
 
 type Worker struct {
 	queue *queue.MessageQueue
+	es    *elasticsearch.Client
 }
 
-func NewWorker(queue *queue.MessageQueue) *Worker {
-	return &Worker{queue: queue}
+func NewWorker(queue *queue.MessageQueue, es *elasticsearch.Client) *Worker {
+	return &Worker{queue: queue, es: es}
 }
 
 func (w *Worker) Start(ctx context.Context) {
@@ -94,6 +100,28 @@ func (w *Worker) processMessageCreation(ctx context.Context, payload json.RawMes
 
 	if err := db.GormDB.Create(message).Error; err != nil {
 		log.Printf("Error creating message: %v", err)
+		return
+	}
+
+	// Index the message in Elasticsearch
+	messageJSON, err := json.Marshal(message)
+	if err != nil {
+		log.Printf("Error marshaling message for Elasticsearch: %v", err)
+		return
+	}
+
+	_, err = w.es.Index(
+		"messages", // Index name
+		bytes.NewReader(messageJSON),
+		w.es.Index.WithDocumentID(fmt.Sprintf("%d-%d", message.ChatID, message.MessageNumber)),
+		w.es.Index.WithRefresh("true"), // Refresh the index
+	)
+	if err != nil {
+		log.Printf("Error indexing message in Elasticsearch: %v", err)
+		return
+	}
+	if err != nil {
+		log.Printf("Error indexing message in Elasticsearch: %v", err)
 		return
 	}
 }
