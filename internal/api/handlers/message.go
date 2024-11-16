@@ -99,3 +99,44 @@ func (h *MessageHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 
 	httputil.WriteJSON(w, http.StatusOK, response)
 }
+
+func (h *MessageHandler) Search(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	chatNumber, err := strconv.Atoi(vars["chatNumber"])
+	if err != nil {
+		http.Error(w, "Invalid chat number", http.StatusBadRequest)
+		return
+	}
+
+	query := r.URL.Query().Get("q")
+	if query == "" {
+		http.Error(w, "Search query is required", http.StatusBadRequest)
+		return
+	}
+
+	messages, err := h.service.SearchMessages(r.Context(), uint(chatNumber), query)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := struct {
+		Messages []struct {
+			MessageNumber int    `json:"message_number"`
+			Body          string `json:"body"`
+		} `json:"messages"`
+	}{
+		Messages: make([]struct {
+			MessageNumber int    `json:"message_number"`
+			Body          string `json:"body"`
+		}, len(messages)),
+	}
+
+	for i, msg := range messages {
+		response.Messages[i].MessageNumber = msg.MessageNumber
+		response.Messages[i].Body = msg.Body
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}

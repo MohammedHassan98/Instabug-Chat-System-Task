@@ -30,7 +30,7 @@ func main() {
 	// Initialize Services
 	appService := service.NewApplicationService(db.GormDB)
 	chatService := service.NewChatService(db.GormDB, db.Redis, messageQueue)
-	messageService := service.NewMessageService(db.GormDB, db.Redis, messageQueue)
+	messageService := service.NewMessageService(db.GormDB, db.Redis, messageQueue, db.ES)
 
 	// Initialize Handlers
 	appHandler := handlers.NewApplicationHandler(appService)
@@ -38,7 +38,7 @@ func main() {
 	messageHandler := handlers.NewMessageHandler(messageService)
 
 	// Initialize Worker
-	worker := worker.NewWorker(messageQueue)
+	worker := worker.NewWorker(messageQueue, db.ES)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	worker.Start(ctx)
@@ -60,6 +60,7 @@ func main() {
 	// Message routes
 	router.HandleFunc("/messages/{chatNumber}", messageHandler.Create).Methods("POST")
 	router.HandleFunc("/applications/{token}/chats/{chatNumber}/messages", messageHandler.GetMessages).Methods("GET")
+	router.HandleFunc("/chats/{chatNumber}/messages/search", messageHandler.Search).Methods("GET")
 
 	// Create server with timeouts
 	srv := &http.Server{

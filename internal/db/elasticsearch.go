@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -50,14 +51,12 @@ func createMessageIndex() error {
 	)
 
 	if err != nil {
-		log.Printf("Cannot create index: %s", err)
-		return err
+		return fmt.Errorf("cannot create index: %w", err)
 	}
 	defer res.Body.Close()
 
 	if res.IsError() {
-		log.Printf("Error creating index: %s", res.String())
-		return err
+		return fmt.Errorf("error creating index: %s", res.String())
 	}
 
 	return nil
