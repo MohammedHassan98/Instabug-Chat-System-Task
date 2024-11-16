@@ -1,17 +1,17 @@
 package worker
 
 import (
+	"bytes"
 	"chat-system/internal/db"
 	"chat-system/internal/db/models"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"chat-system/internal/queue"
-
-	"bytes"
 
 	"github.com/elastic/go-elasticsearch/v8"
 )
@@ -19,6 +19,7 @@ import (
 type Worker struct {
 	queue *queue.MessageQueue
 	es    *elasticsearch.Client
+	mu    sync.Mutex // Mutex to protect critical sections
 }
 
 func NewWorker(queue *queue.MessageQueue, es *elasticsearch.Client) *Worker {
@@ -69,6 +70,9 @@ func (w *Worker) processChatCreation(ctx context.Context, payload json.RawMessag
 		return
 	}
 
+	w.mu.Lock() // Lock before creating chat
+	defer w.mu.Unlock()
+
 	chat := &models.Chat{
 		ApplicationID: data.AppID,
 		ChatNumber:    data.ChatNumber,
@@ -91,6 +95,9 @@ func (w *Worker) processMessageCreation(ctx context.Context, payload json.RawMes
 		log.Printf("Error unmarshaling message creation payload: %v", err)
 		return
 	}
+
+	w.mu.Lock() // Lock before creating chat
+	defer w.mu.Unlock()
 
 	message := &models.Message{
 		ChatID:        data.ChatID,

@@ -122,13 +122,13 @@ func (h *MessageHandler) Search(w http.ResponseWriter, r *http.Request) {
 
 	response := struct {
 		Messages []struct {
-			MessageNumber int    `json:"message_number"`
-			Body          string `json:"body"`
+			MessageNumber int    `json:"Message Number"`
+			Body          string `json:"Body"`
 		} `json:"messages"`
 	}{
 		Messages: make([]struct {
-			MessageNumber int    `json:"message_number"`
-			Body          string `json:"body"`
+			MessageNumber int    `json:"Message Number"`
+			Body          string `json:"Body"`
 		}, len(messages)),
 	}
 

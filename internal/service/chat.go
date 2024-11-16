@@ -5,6 +5,7 @@ import (
 	"chat-system/internal/queue"
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
@@ -14,6 +15,7 @@ type ChatService struct {
 	db    *gorm.DB
 	redis *redis.Client
 	queue *queue.MessageQueue
+	mu    sync.Mutex
 }
 
 func NewChatService(db *gorm.DB, redis *redis.Client, queue *queue.MessageQueue) *ChatService {
@@ -21,6 +23,9 @@ func NewChatService(db *gorm.DB, redis *redis.Client, queue *queue.MessageQueue)
 }
 
 func (s *ChatService) CreateChat(ctx context.Context, appToken string) (*models.Chat, error) {
+	s.mu.Lock()         // Locking the mutex to prevent race conditions
+	defer s.mu.Unlock() // Ensure the mutex is unlocked at the end of the function
+
 	// Start transaction
 	tx := s.db.Begin()
 	if tx.Error != nil {
@@ -42,6 +47,7 @@ func (s *ChatService) CreateChat(ctx context.Context, appToken string) (*models.
 
 	// Get next chat number using Redis
 	chatNumKey := fmt.Sprintf("app:%d:next_chat_num", app.ID)
+
 	chatNum, err := s.redis.Incr(ctx, chatNumKey).Result()
 	if err != nil {
 		tx.Rollback()

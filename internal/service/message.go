@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/go-redis/redis/v8"
@@ -18,6 +19,7 @@ type MessageService struct {
 	redis *redis.Client
 	queue *queue.MessageQueue
 	es    *elasticsearch.Client
+	mu    sync.Mutex
 }
 
 func NewMessageService(db *gorm.DB, redis *redis.Client, queue *queue.MessageQueue, es *elasticsearch.Client) *MessageService {
@@ -25,6 +27,9 @@ func NewMessageService(db *gorm.DB, redis *redis.Client, queue *queue.MessageQue
 }
 
 func (s *MessageService) CreateMessage(ctx context.Context, chatID uint, body string) (*models.Message, error) {
+	s.mu.Lock()         // Locking the mutex to prevent race conditions
+	defer s.mu.Unlock() // Ensure the mutex is unlocked at the end of the function
+
 	// Get next message number using Redis
 	msgNumKey := fmt.Sprintf("chat:%d:next_msg_num", chatID)
 	msgNum, err := s.redis.Incr(ctx, msgNumKey).Result()
