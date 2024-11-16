@@ -1,0 +1,70 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: chat_system
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - chat_network # Assign to the same network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 3s
+      retries: 5
+      start_period: 10s
+      timeout: 3s
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - chat_network # Assign to the same network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+    networks:
+      - chat_network # Assign to the same network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
+      interval: 3s
+      timeout: 5s
+      retries: 3
+  app:
+    build:
+      context: .
+    container_name: chat-system-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - redis
+      - elasticsearch
+    environment:
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_HOST: db # Use 'db' as the hostname to connect to the MySQL container
+      DB_PORT: 3306
+      DB_NAME: chat_system
+      REDIS_HOST: redis # Redis hostname for connecting
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    networks:
+      - chat_network # Assign to a custom network
+
+volumes:
+  db-data:
+
+networks:
+  chat_network:
+    driver: bridge # Using the default bridge network driver

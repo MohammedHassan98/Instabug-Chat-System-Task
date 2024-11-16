@@ -1,6 +1,6 @@
 module chat-system
 
-go 1.23.3
+go 1.23
 
 require (
 	github.com/elastic/go-elasticsearch/v8 v8.15.0
