@@ -4,6 +4,7 @@ package db
 import (
 	"chat-system/internal/db/migrations"
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -27,12 +28,21 @@ func Connect() {
 	}
 
 	// Connect to MySQL
-	dbURL := os.Getenv("DATABASE_URL")
+	dbURL := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
+		os.Getenv("DB_USER"),     // Username
+		os.Getenv("DB_PASSWORD"), // Password
+		os.Getenv("DB_HOST"),     // Host (e.g., "db")
+		os.Getenv("DB_PORT"),     // Port (e.g., "3306")
+		os.Getenv("DB_NAME"))     // Database name (e.g., "chat_system")
+
 	dsn := dbURL + "?charset=utf8mb4&parseTime=True&loc=Local"
 
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	var db *gorm.DB
+	var err error
+
+	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("Could not connect to database: %v", err)
+		log.Fatalf("Could not connect to database after 3 attempts: %v", err)
 	}
 
 	sqlDB, err := db.DB()
@@ -54,11 +64,14 @@ func Connect() {
 
 	// Connect to Redis
 	Redis = redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("REDIS_URL"),
+		Addr:     os.Getenv("REDIS_HOST") + ":6379",
 		Password: os.Getenv("REDIS_PASSWORD"),
 		DB:       0,
 	})
 
 	migrations.RunMigrations(db)
+
+	// Connect to Elasticsearch
+	setupElasticsearch()
 	log.Println("Connected to database and services")
 }

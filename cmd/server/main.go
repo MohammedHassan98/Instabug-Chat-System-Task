@@ -63,7 +63,7 @@ func main() {
 
 	// Create server with timeouts
 	srv := &http.Server{
-		Addr:         os.Getenv("SERVER_ADDRESS"),
+		Addr:         "0.0.0.0:8080",
 		Handler:      router,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
