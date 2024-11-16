@@ -96,7 +96,6 @@ func (w *Worker) processMessageCreation(ctx context.Context, payload json.RawMes
 		log.Printf("Error creating message: %v", err)
 		return
 	}
-
 }
 
 func (w *Worker) updateCounters(ctx context.Context) {
