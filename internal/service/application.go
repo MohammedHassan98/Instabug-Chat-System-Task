@@ -51,10 +51,12 @@ func (s *ApplicationService) GetApplicationByToken(ctx context.Context, token st
 	return &app, nil
 }
 
-func (s *ApplicationService) GetAllApplications(ctx context.Context) ([]models.Application, error) {
+func (s *ApplicationService) GetAllApplications(ctx context.Context, page int, limit int) ([]models.Application, error) {
 	var apps []models.Application
 
-	if err := s.db.Find(&apps).Error; err != nil {
+	// Apply pagination
+	offset := (page - 1) * limit
+	if err := s.db.Offset(offset).Limit(limit).Find(&apps).Error; err != nil {
 		return nil, err
 	}
 	return apps, nil
@@ -75,14 +77,16 @@ func (s *ApplicationService) UpdateApplication(ctx context.Context, token string
 	return app, nil
 }
 
-func (s *ApplicationService) GetChatsWithApplicationByToken(ctx context.Context, token string) ([]models.Chat, error) {
+func (s *ApplicationService) GetChatsWithApplicationByToken(ctx context.Context, token string, page int, limit int) ([]models.Chat, error) {
 	var chats []models.Chat
 
 	// Perform a single query with a join to fetch chats and the application ID
+	offset := (page - 1) * limit
 	err := s.db.Table("applications").
 		Select("chats.chat_number, chats.messages_count").
 		Joins("JOIN chats ON chats.application_id = applications.id").
 		Where("applications.token = ?", token).
+		Offset(offset).Limit(limit).
 		Scan(&chats).Error
 
 	if err != nil {

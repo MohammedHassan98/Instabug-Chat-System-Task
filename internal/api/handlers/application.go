@@ -6,6 +6,7 @@ import (
 	"chat-system/internal/service"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -54,7 +55,18 @@ func (h *ApplicationHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ApplicationHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	apps, err := h.service.GetAllApplications(r.Context())
+	// Get pagination parameters from query
+	pageStr := r.URL.Query().Get("page")
+	limitStr := r.URL.Query().Get("limit")
+	page, limit := 1, 10 // default values
+	if pageStr != "" {
+		page, _ = strconv.Atoi(pageStr) // handle error appropriately in production
+	}
+	if limitStr != "" {
+		limit, _ = strconv.Atoi(limitStr) // handle error appropriately in production
+	}
+
+	apps, err := h.service.GetAllApplications(r.Context(), page, limit)
 
 	if err != nil {
 		httputil.WriteError(w, http.StatusInternalServerError, err.Error())
@@ -117,7 +129,18 @@ func (h *ApplicationHandler) GetChats(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	token := vars["token"]
 
-	chats, err := h.service.GetChatsWithApplicationByToken(r.Context(), token)
+	// Get pagination parameters from query
+	pageStr := r.URL.Query().Get("page")
+	limitStr := r.URL.Query().Get("limit")
+	page, limit := 1, 10 // default values
+	if pageStr != "" {
+		page, _ = strconv.Atoi(pageStr) // handle error appropriately in production
+	}
+	if limitStr != "" {
+		limit, _ = strconv.Atoi(limitStr) // handle error appropriately in production
+	}
+
+	chats, err := h.service.GetChatsWithApplicationByToken(r.Context(), token, page, limit)
 
 	if err != nil {
 		httputil.WriteError(w, http.StatusInternalServerError, "Internal server error")
