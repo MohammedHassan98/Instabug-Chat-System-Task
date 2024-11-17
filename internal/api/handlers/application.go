@@ -11,8 +11,18 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// @title Application API
+// @version 1.0
+// @description Application handler manages application operations
+
 type ApplicationHandler struct {
 	service *service.ApplicationService
+}
+
+// ApplicationResponse represents the response for application operations
+type ApplicationResponse struct {
+    Token string `json:"token"`
+    Name  string `json:"name"`
 }
 
 func NewApplicationHandler(service *service.ApplicationService) *ApplicationHandler {
@@ -23,6 +33,16 @@ type createApplicationRequest struct {
 	Name string `json:"name" validate:"required,app_name"`
 }
 
+// @Summary Create a new application
+// @Description Creates a new application with the given name
+// @Tags Applications
+// @Accept json
+// @Produce json
+// @Param application body createApplicationRequest true "Application creation request"
+// @Success 201 {object} handlers.ApplicationResponse
+// @Failure 400 {object} httputil.ErrorResponse
+// @Failure 500 {object} httputil.ErrorResponse
+// @Router /applications [post]
 func (h *ApplicationHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req createApplicationRequest
 
@@ -54,6 +74,16 @@ func (h *ApplicationHandler) Create(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusCreated, response)
 }
 
+// @Summary Get all applications
+// @Description Retrieves all applications with pagination
+// @Tags Applications
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Success 200 {array} handlers.ApplicationListResponse
+// @Failure 500 {object} httputil.ErrorResponse
+// @Router /applications [get]
 func (h *ApplicationHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	// Get pagination parameters from query
 	pageStr := r.URL.Query().Get("page")
@@ -91,6 +121,17 @@ func (h *ApplicationHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, response)
 }
 
+// @Summary Update application
+// @Description Updates an application by token
+// @Tags Applications
+// @Accept json
+// @Produce json
+// @Param token path string true "Application Token"
+// @Param application body createApplicationRequest true "Application update request"
+// @Success 200 {object} handlers.ApplicationResponse
+// @Failure 400 {object} httputil.ErrorResponse
+// @Failure 500 {object} httputil.ErrorResponse
+// @Router /applications/{token} [put]
 func (h *ApplicationHandler) Update(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	token := vars["token"]
@@ -125,6 +166,17 @@ func (h *ApplicationHandler) Update(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, response)
 }
 
+// @Summary Get application chats
+// @Description Retrieves all chats for an application
+// @Tags Applications
+// @Accept json
+// @Produce json
+// @Param token path string true "Application Token"
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Success 200 {array} handlers.ApplicationChatResponse
+// @Failure 500 {object} httputil.ErrorResponse
+// @Router /applications/{token}/chats [get]
 func (h *ApplicationHandler) GetChats(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	token := vars["token"]

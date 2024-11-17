@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"sync"
 
@@ -36,7 +35,6 @@ func (rl *RateLimiter) getLimiterForIP(ip string) *rate.Limiter {
 }
 
 func (rl *RateLimiter) RateLimit(next http.Handler) http.Handler {
-    log.Println("Rate limiting middleware")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         ip := r.RemoteAddr
         limiter := rl.getLimiterForIP(ip)

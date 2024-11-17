@@ -1,3 +1,9 @@
+// @title Chat System API
+// @version 1.0
+// @description The Chat System API allows managing applications, chats, and messages efficiently. Each application is identified by a unique token, and chats and messages are sequentially numbered. It supports partial message search using Elasticsearch and ensures high performance with concurrency handling. The system is fully containerized for easy deployment.
+// @host localhost:8080
+// @BasePath /
+
 // cmd/server/main.go
 package main
 
@@ -17,7 +23,10 @@ import (
 	"syscall"
 	"time"
 
+	_ "chat-system/docs"
+
 	"github.com/gorilla/mux"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func main() {
@@ -51,11 +60,16 @@ func main() {
 	router.Use(middleware.ErrorHandler)
 	router.Use(rateLimiter.RateLimit)
 
+	// Add Swagger
+	router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
+
 	// Application routes
-	router.HandleFunc("/applications", appHandler.GetAll).Methods("GET")
-	router.HandleFunc("/applications/{token}/chats", appHandler.GetChats).Methods("GET")
 	router.HandleFunc("/applications", appHandler.Create).Methods("POST")
+	router.HandleFunc("/applications", appHandler.GetAll).Methods("GET")
 	router.HandleFunc("/applications/{token}", appHandler.Update).Methods("PUT")
+	router.HandleFunc("/applications/{token}/chats", appHandler.GetChats).Methods("GET")
 
 	// Chat routes
 	router.HandleFunc("/chats/{token}", chatHandler.Create).Methods("POST")

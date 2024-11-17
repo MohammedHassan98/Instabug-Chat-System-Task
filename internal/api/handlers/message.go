@@ -11,6 +11,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// @title Message API
+// @version 1.0
+// @description Message handler manages message operations
+
 type MessageHandler struct {
 	service *service.MessageService
 }
@@ -23,6 +27,18 @@ func NewMessageHandler(service *service.MessageService) *MessageHandler {
 	return &MessageHandler{service: service}
 }
 
+
+// @Summary Create a new message
+// @Description Creates a new message in a chat
+// @Tags Messages
+// @Accept json
+// @Produce json
+// @Param chatNumber path int true "Chat Number"
+// @Param message body createMessageRequest true "Message creation request"
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} httputil.ErrorResponse
+// @Failure 500 {object} httputil.ErrorResponse
+// @Router /chats/{chatNumber}/messages [post]
 func (h *MessageHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req createMessageRequest
 
@@ -67,6 +83,17 @@ func (h *MessageHandler) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// @Summary Get messages
+// @Description Retrieves all messages for a chat
+// @Tags Messages
+// @Accept json
+// @Produce json
+// @Param token path string true "Application Token"
+// @Param chatNumber path int true "Chat Number"
+// @Success 200 {array} MessageListResponse
+// @Failure 400 {object} httputil.ErrorResponse
+// @Failure 500 {object} httputil.ErrorResponse
+// @Router /applications/{token}/chats/{chatNumber}/messages [get]
 func (h *MessageHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	token := vars["token"] // Get the application token from the URL
@@ -100,6 +127,17 @@ func (h *MessageHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, response)
 }
 
+// @Summary Search messages
+// @Description Search messages in a chat
+// @Tags Messages
+// @Accept json
+// @Produce json
+// @Param chatNumber path int true "Chat Number"
+// @Param q query string true "Search query"
+// @Success 200 {object} MessageListResponse
+// @Failure 400 {object} httputil.ErrorResponse
+// @Failure 500 {object} httputil.ErrorResponse
+// @Router /chats/{chatNumber}/messages/search [get]
 func (h *MessageHandler) Search(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	chatNumber, err := strconv.Atoi(vars["chatNumber"])
@@ -140,3 +178,18 @@ func (h *MessageHandler) Search(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
+
+// Update the Create handler annotation
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} httputil.ErrorResponse
+// @Failure 500 {object} httputil.ErrorResponse
+
+// Update the GetMessages handler annotation
+// @Success 200 {array} MessageListResponse
+// @Failure 400 {object} httputil.ErrorResponse
+// @Failure 500 {object} httputil.ErrorResponse
+
+// Update the Search handler annotation
+// @Success 200 {object} MessageListResponse
+// @Failure 400 {object} httputil.ErrorResponse
+// @Failure 500 {object} httputil.ErrorResponse

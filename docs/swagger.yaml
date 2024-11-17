@@ -1,0 +1,329 @@
+basePath: /
+definitions:
+  handlers.ApplicationChatResponse:
+    properties:
+      Chat Number:
+        type: integer
+      Messages:
+        type: integer
+    type: object
+  handlers.ApplicationResponse:
+    properties:
+      name:
+        type: string
+      token:
+        type: string
+    type: object
+  handlers.ChatResponse:
+    properties:
+      Chat Number:
+        type: integer
+    type: object
+  handlers.MessageResponse:
+    properties:
+      Message Number:
+        type: integer
+      body:
+        type: string
+    type: object
+  handlers.createApplicationRequest:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  handlers.createMessageRequest:
+    properties:
+      body:
+        minLength: 1
+        type: string
+    required:
+    - body
+    type: object
+  httputil.ErrorResponse:
+    properties:
+      error:
+        type: string
+      errors: {}
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: The Chat System API allows managing applications, chats, and messages
+    efficiently. Each application is identified by a unique token, and chats and messages
+    are sequentially numbered. It supports partial message search using Elasticsearch
+    and ensures high performance with concurrency handling. The system is fully containerized
+    for easy deployment.
+  title: Chat System API
+  version: "1.0"
+paths:
+  /applications:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all applications with pagination
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/handlers.ApplicationResponse'
+              type: array
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      summary: Get all applications
+      tags:
+      - Applications
+    post:
+      consumes:
+      - application/json
+      description: Creates a new application with the given name
+      parameters:
+      - description: Application creation request
+        in: body
+        name: application
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.ApplicationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      summary: Create a new application
+      tags:
+      - Applications
+  /applications/{token}:
+    put:
+      consumes:
+      - application/json
+      description: Updates an application by token
+      parameters:
+      - description: Application Token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: Application update request
+        in: body
+        name: application
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ApplicationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      summary: Update application
+      tags:
+      - Applications
+  /applications/{token}/chats:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all chats for an application
+      parameters:
+      - description: Application Token
+        in: path
+        name: token
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.ApplicationChatResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      summary: Get application chats
+      tags:
+      - Applications
+    post:
+      consumes:
+      - application/json
+      description: Creates a new chat for the given application token
+      parameters:
+      - description: Application Token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ChatResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      summary: Create a new chat
+      tags:
+      - Chats
+  /applications/{token}/chats/{chatNumber}/messages:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all messages for a chat
+      parameters:
+      - description: Application Token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: Chat Number
+        in: path
+        name: chatNumber
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/handlers.MessageResponse'
+              type: array
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      summary: Get messages
+      tags:
+      - Messages
+  /chats/{chatNumber}/messages:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new message in a chat
+      parameters:
+      - description: Chat Number
+        in: path
+        name: chatNumber
+        required: true
+        type: integer
+      - description: Message creation request
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      summary: Create a new message
+      tags:
+      - Messages
+  /chats/{chatNumber}/messages/search:
+    get:
+      consumes:
+      - application/json
+      description: Search messages in a chat
+      parameters:
+      - description: Chat Number
+        in: path
+        name: chatNumber
+        required: true
+        type: integer
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.MessageResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      summary: Search messages
+      tags:
+      - Messages
+swagger: "2.0"
