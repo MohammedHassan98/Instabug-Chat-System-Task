@@ -43,10 +43,13 @@ func main() {
 	defer cancel()
 	worker.Start(ctx)
 
-	// Set up router with middleware
+	// Initialize middlewares
+	rateLimiter := middleware.NewRateLimiter(100, 200)
+
 	router := mux.NewRouter()
 	router.Use(middleware.RequestLogger)
 	router.Use(middleware.ErrorHandler)
+	router.Use(rateLimiter.RateLimit)
 
 	// Application routes
 	router.HandleFunc("/applications", appHandler.GetAll).Methods("GET")
